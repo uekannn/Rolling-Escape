@@ -11,12 +11,15 @@
     text-align: center;
     color: #fff;
     font-weight: 900;
+    margin: 0;
+    padding: 0;
   }
   canvas {
     background: #111;
     border: 2px solid #333;
     display: block;
     margin: 10px auto;
+    touch-action: none; /* ←スマホでドラッグ無効 */
   }
   #restartBtn {
     display: none;
@@ -27,6 +30,8 @@
     background: #fff;
     cursor: pointer;
   }
+
+  
 </style>
 
 <script type="text/javascript">
@@ -36,14 +41,21 @@ window.onload = function() {
   let restartBtn = document.getElementById("restartBtn");
 
   let endSound = new Audio("zannense.mp3");
-
+  let jumpSound = new Audio("se_jump_001.mp3");
 
   let highScore = Number(localStorage.getItem("highScore")) || 0;
 
   let circle, gravity, jumpPower, obstacles, obstacleSpeed, frameCount, score, gameOver;
   let colors = ["#ff4d4d", "#4da6ff", "#4dff88", "#ffcc4d"];
 
+  function resizeCanvas(){
+    canvas.width = window.innerWidth * 0.95;
+    canvas.height = window.innerHeight * 0.7;
+  }
+  window.addEventListener("resize", resizeCanvas);
+
   function init() {
+    resizeCanvas();
     circle = { x: 100, y: 200, r: 15, vy: 0 };
     gravity = 0.4;
     jumpPower = -7;
@@ -55,14 +67,21 @@ window.onload = function() {
     restartBtn.style.display = "none";
   }
 
-  window.addEventListener("keydown", function(evt) {
-  if (evt.keyCode === 13 && !gameOver) {
+  function jump(){
     circle.vy = jumpPower;
-
-    jumpSound.currentTime = 0; // ← 毎回頭から再生
-    jumpSound.play();          // ← 再生
+    jumpSound.currentTime = 0;
+    jumpSound.play();
   }
-});
+
+  // PC Enter
+  window.addEventListener("keydown", function(evt) {
+    if (evt.keyCode === 13 && !gameOver) jump();
+  });
+
+  // スマホ Tap
+  canvas.addEventListener("touchstart", function(){
+    if(!gameOver) jump();
+  });
 
   function getRank(score) {
     if (score < 100) return "赤ちゃん";
@@ -91,13 +110,11 @@ window.onload = function() {
     circle.vy += gravity;
     circle.y += circle.vy;
 
-    // 上の壁
     if (circle.y - circle.r < 0) {
       circle.y = circle.r;
       circle.vy = 0;
     }
 
-    // 下に落ちたらゲームオーバー
     if (circle.y + circle.r > canvas.height) {
       if (!gameOver) {
         endSound.currentTime = 0;
@@ -115,10 +132,8 @@ window.onload = function() {
     ctx.fillStyle = "#fff";
     ctx.fill();
 
-    // スコア
     score += 0.5;
 
-    // スピードアップ
     if (score < 200) obstacleSpeed = 5;
     else if (score < 400) obstacleSpeed = 6;
     else if (score < 700) obstacleSpeed = 7;
@@ -126,7 +141,7 @@ window.onload = function() {
     else obstacleSpeed = 9;
 
     ctx.fillStyle = "#fff";
-    ctx.font = '20px "DotGothic16", sans-serif';
+    ctx.font = '18px "DotGothic16", sans-serif';
     ctx.textAlign = "left";
     ctx.fillText("SCORE: " + Math.floor(score), 20, 30);
     ctx.fillText("HIGH: " + Math.floor(highScore), 20, 55);
@@ -146,7 +161,6 @@ window.onload = function() {
       ctx.fillStyle = o.c;
       ctx.fillRect(o.x, o.y, o.w, o.h);
 
-      // 当たったらゲームオーバー＋音
       if (
         circle.x + circle.r > o.x &&
         circle.x - circle.r < o.x + o.w &&
@@ -183,9 +197,8 @@ window.onload = function() {
 <body>
   <h1>Rolling Escape</h1>
   <p>
-    Enterキーでジャンプ！<br>
+    Enterキー or タップでジャンプ！<br>
     スコアが上がるとスピードUP！<br>
-    〜100:赤ちゃん　100〜500:初心者　500〜1000:中級者　1000〜:神
   </p>
 
   <canvas id="main" width="1200" height="600"></canvas>
