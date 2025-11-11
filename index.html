@@ -134,7 +134,7 @@ window.onload = function() {
     else if (score < 400) obstacleSpeed = 15;
     else if (score < 700) obstacleSpeed = 20;
     else if (score < 1000) obstacleSpeed = 25;
-    else obstacleSpeed = 9;
+    else obstacleSpeed = 25;
 
     // =====================
     // スマホはさらに速く
@@ -151,7 +151,7 @@ window.onload = function() {
 
     // =====================
     // スマホ → 障害物生成間隔を小さく 40→25
-    let interval = isMobile ? 25 : 40;
+    let interval = isMobile ? 15 : 20;
     // =====================
 
     if (frameCount % interval === 0) {
