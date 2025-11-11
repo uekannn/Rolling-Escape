@@ -18,8 +18,8 @@
     background: #111;
     border: 2px solid #333;
     display: block;
-    margin: 10px auto;
-    touch-action: none; /* ←スマホでドラッグ無効 */
+    margin: 20px auto;
+    touch-action: none;
   }
   #restartBtn {
     display: none;
@@ -30,18 +30,14 @@
     background: #fff;
     cursor: pointer;
   }
-
-  
-  @media (max-width: 800px) {
-  canvas {
-    height: 50px !important;
-  }
-}
-
 </style>
 
 <script type="text/javascript">
 window.onload = function() {
+
+  // スマホ判定（幅800以下をスマホ扱い）
+  let isMobile = window.innerWidth < 800;
+
   let canvas = document.getElementById("main");
   let ctx = canvas.getContext("2d");
   let restartBtn = document.getElementById("restartBtn");
@@ -54,9 +50,10 @@ window.onload = function() {
   let circle, gravity, jumpPower, obstacles, obstacleSpeed, frameCount, score, gameOver;
   let colors = ["#ff4d4d", "#4da6ff", "#4dff88", "#ffcc4d"];
 
+  // スマホは縦幅 0.6 にしてもっと低く
   function resizeCanvas(){
-    canvas.width = window.innerWidth * 0.95;
-    canvas.height = window.innerHeight * 0.7;
+    canvas.width  = window.innerWidth * 0.95;
+    canvas.height = isMobile ? window.innerHeight * 0.6 : window.innerHeight * 0.7;
   }
   window.addEventListener("resize", resizeCanvas);
 
@@ -66,7 +63,7 @@ window.onload = function() {
     gravity = 0.4;
     jumpPower = -7;
     obstacles = [];
-    obstacleSpeed = 5;
+    obstacleSpeed = 5;  // ここからスコアで加速させる
     frameCount = 0;
     score = 0;
     gameOver = false;
@@ -79,12 +76,11 @@ window.onload = function() {
     jumpSound.play();
   }
 
-  // PC Enter
+  // PC: Enter
   window.addEventListener("keydown", function(evt) {
     if (evt.keyCode === 13 && !gameOver) jump();
   });
-
-  // スマホ Tap
+  // スマホ: タップ
   canvas.addEventListener("touchstart", function(){
     if(!gameOver) jump();
   });
@@ -116,16 +112,10 @@ window.onload = function() {
     circle.vy += gravity;
     circle.y += circle.vy;
 
-    if (circle.y - circle.r < 0) {
-      circle.y = circle.r;
-      circle.vy = 0;
-    }
+    if (circle.y - circle.r < 0) { circle.y = circle.r; circle.vy = 0; }
 
     if (circle.y + circle.r > canvas.height) {
-      if (!gameOver) {
-        endSound.currentTime = 0;
-        endSound.play();
-      }
+      if (!gameOver) { endSound.currentTime = 0; endSound.play(); }
       gameOver = true;
       if (score > highScore) {
         highScore = score;
@@ -146,6 +136,11 @@ window.onload = function() {
     else if (score < 1000) obstacleSpeed = 25;
     else obstacleSpeed = 9;
 
+    // =====================
+    // スマホはさらに速く
+    if (isMobile) obstacleSpeed += 2;
+    // =====================
+
     ctx.fillStyle = "#fff";
     ctx.font = '18px "DotGothic16", sans-serif';
     ctx.textAlign = "left";
@@ -154,7 +149,12 @@ window.onload = function() {
 
     frameCount++;
 
-    if (frameCount % 40 === 0) {
+    // =====================
+    // スマホ → 障害物生成間隔を小さく 40→25
+    let interval = isMobile ? 25 : 40;
+    // =====================
+
+    if (frameCount % interval === 0) {
       let h = 40 + Math.random() * 100;
       let y = Math.random() * (canvas.height - h);
       let color = colors[Math.floor(Math.random() * colors.length)];
@@ -173,10 +173,7 @@ window.onload = function() {
         circle.y + circle.r > o.y &&
         circle.y - circle.r < o.y + o.h
       ) {
-        if (!gameOver) {
-          endSound.currentTime = 0;
-          endSound.play();
-        }
+        if (!gameOver) { endSound.currentTime = 0; endSound.play(); }
         gameOver = true;
         if (score > highScore) {
           highScore = score;
@@ -184,15 +181,11 @@ window.onload = function() {
         }
       }
 
-      if (o.x + o.w < 0) {
-        obstacles.splice(i, 1);
-      }
+      if (o.x + o.w < 0) obstacles.splice(i, 1);
     }
   }
 
-  restartBtn.addEventListener("click", function() {
-    init();
-  });
+  restartBtn.addEventListener("click", function() { init(); });
 
   init();
   setInterval(draw, 20);
@@ -207,8 +200,8 @@ window.onload = function() {
     スコアが上がるとスピードUP！<br>
   </p>
 
-  <canvas id="main" width="1200" height="600"></canvas>
+  <canvas id="main"></canvas>
   <button id="restartBtn">もう一度</button>
-  
 </body>
 </html>
+
